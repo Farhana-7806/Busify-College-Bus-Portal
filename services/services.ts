@@ -1,3 +1,4 @@
+
 import { GoogleGenAI, Type } from "@google/genai";
 
 /**
@@ -9,38 +10,8 @@ export const getAIEtaPrediction = async (
   weather: string,
   trafficLevel: 'Low' | 'Medium' | 'High'
 ) => {
-  // Always initialize right before use for environment variable reliability.
-  const apiKey = process.env.API_KEY;
-  if (!apiKey) {
-    console.warn("API Key missing, using fallback prediction.");
-    return { eta: 10, reason: "Manual estimate based on standard speed." };
-  }
-
-  const ai = new GoogleGenAI({ apiKey });
-  try {
-    const distanceKm = Math.sqrt(
-      Math.pow(destination.lat - currentLocation.lat, 2) + 
-      Math.pow(destination.lng - currentLocation.lng, 2)
-import { GoogleGenAI, Type } from "@google/genai";
-
-/**
- * Predicts the college bus ETA based on current conditions using Gemini.
- */
-export const getAIEtaPrediction = async (
-  currentLocation: { lat: number, lng: number },
-  destination: { lat: number, lng: number },
-  weather: string,
-  trafficLevel: 'Low' | 'Medium' | 'High'
-) => {
-  // Accessing process.env.API_KEY which is defined in vite.config.ts
-  const apiKey = process.env.API_KEY;
-  
-  if (!apiKey) {
-    console.warn("Gemini API Key is missing. Check your environment variables.");
-    return { eta: 12, reason: "Estimated based on historical route data (API Key Missing)." };
-  }
-
-  const ai = new GoogleGenAI({ apiKey });
+  // Always initialize right before use using direct access to process.env.API_KEY.
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   
   try {
     const distanceKm = Math.sqrt(
@@ -48,95 +19,33 @@ export const getAIEtaPrediction = async (
       Math.pow(destination.lng - currentLocation.lng, 2)
     ) * 111;
 
+    // Fix: Using 'gemini-3-pro-preview' for complex reasoning/math-based ETA prediction.
     const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
-      contents: `Predict college bus ETA in minutes and provide a 1-sentence student-friendly explanation.
-      Current Bus Location: ${currentLocation.lat}, ${currentLocation.lng}
-      Destination Stop: ${destination.lat}, ${destination.lng}
-      Calculated Distance: ${distanceKm.toFixed(2)} km
-      Current Weather: ${weather}
-      Local Traffic: ${trafficLevel}`,
+      model: "gemini-3-pro-preview",
+      contents: `Predict college bus ETA in minutes for a ${distanceKm.toFixed(2)}km trip. 
+      Weather: ${weather}, Traffic: ${trafficLevel}. 
+      Return a student-friendly 1-sentence explanation.`,
       config: {
         responseMimeType: "application/json",
         responseSchema: {
           type: Type.OBJECT,
           properties: {
-            eta: {
-              type: Type.NUMBER,
-              description: 'Arrival time in minutes.',
-            },
-            reason: {
-              type: Type.STRING,
-              description: 'Short reason for this prediction.',
-            },
+            eta: { type: Type.NUMBER },
+            reason: { type: Type.STRING },
           },
           required: ["eta", "reason"],
         },
       }
     });
 
-    // Use .text property getter as per latest @google/genai guidelines
+    // Access .text property directly as a getter and trim before parsing.
     const text = response.text;
-    return JSON.parse(text || "{}");
+    if (!text) throw new Error("AI returned empty response");
+    
+    return JSON.parse(text.trim());
   } catch (error) {
     console.error("AI ETA Prediction Error:", error);
-    return { eta: 15, reason: "Standard estimate while AI recalibrates." };
-  }
-};
-
-/**
- * Summarizes bus alerts into a short, friendly message for the UI.
- */
-export const getSmartSummary = async (announcements: string[]) => {
-  const apiKey = process.env.API_KEY;
-  if (!apiKey || announcements.length === 0) return "Check the latest campus transit alerts below.";
-
-  const ai = new GoogleGenAI({ apiKey });
-  try {
-    const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
-      contents: `Summarize these bus alerts into one friendly 20-word status update for students: ${announcements.join('; ')}`,
-    });
-    return response.text || "Stay updated with campus transport.";
-  } catch (error) {
-    console.error("AI Summary Error:", error);
-    return "Check the latest alerts below.";
-  }
-};
-    ) * 111;
-
-    const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
-      contents: `Predict college bus ETA in minutes and provide a 1-sentence explanation.
-      Location: ${currentLocation.lat}, ${currentLocation.lng} to ${destination.lat}, ${destination.lng}
-      Calculated distance: ${distanceKm.toFixed(2)} km.
-      Weather: ${weather}.
-      Traffic: ${trafficLevel}.`,
-      config: {
-        responseMimeType: "application/json",
-        responseSchema: {
-          type: Type.OBJECT,
-          properties: {
-            eta: {
-              type: Type.NUMBER,
-              description: 'The estimated time in minutes until arrival.',
-            },
-            reason: {
-              type: Type.STRING,
-              description: 'A brief, student-friendly explanation for the prediction.',
-            },
-          },
-          required: ["eta", "reason"],
-        },
-      }
-    });
-
-    // Access .text property directly as a getter.
-    const text = response.text;
-    return JSON.parse(text || "{}");
-  } catch (error) {
-    console.error("AI ETA Prediction Error:", error);
-    return { eta: 15, reason: "Standard estimate based on distance." };
+    return { eta: 15, reason: "Traffic data is currently unavailable, using standard route timing." };
   }
 };
 
@@ -144,19 +53,20 @@ export const getSmartSummary = async (announcements: string[]) => {
  * Summarizes bus alerts into a short, friendly message.
  */
 export const getSmartSummary = async (announcements: string[]) => {
-  const apiKey = process.env.API_KEY;
-  if (!apiKey) return "Check the latest alerts below.";
+  if (announcements.length === 0) return "Stay safe and check for live updates.";
 
-  const ai = new GoogleGenAI({ apiKey });
+  // Always initialize right before use with direct access to process.env.API_KEY.
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   try {
+    // Fix: Using 'gemini-3-flash-preview' for basic text summarization tasks.
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
-      contents: `Summarize these bus alerts into one friendly 20-word message: ${announcements.join('; ')}`,
+      contents: `Summarize these bus alerts into one 15-word friendly update: ${announcements.join('; ')}`,
     });
-    // Access .text property directly.
-    return response.text || "Check the latest alerts below.";
+    // Property .text is the correct way to extract the response.
+    return response.text?.trim() || "Check the alerts section for updates.";
   } catch (error) {
     console.error("AI Summary Error:", error);
-    return "Check the latest alerts below.";
+    return "Check the latest campus alerts below.";
   }
 };
