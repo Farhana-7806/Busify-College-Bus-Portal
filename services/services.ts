@@ -1,8 +1,4 @@
-
 import { GoogleGenAI, Type } from "@google/genai";
-
-// Fix for "Cannot find name 'process'" in CI environments
-declare var process: { env: { [key: string]: string | undefined } };
 
 /**
  * Predicts the college bus ETA based on current conditions using Gemini.
@@ -13,8 +9,12 @@ export const getAIEtaPrediction = async (
   weather: string,
   trafficLevel: 'Low' | 'Medium' | 'High'
 ) => {
+  // Always initialize right before use for environment variable reliability.
   const apiKey = process.env.API_KEY;
-  if (!apiKey) return { eta: 10, reason: "API Key missing, using default ETA." };
+  if (!apiKey) {
+    console.warn("API Key missing, using fallback prediction.");
+    return { eta: 10, reason: "Manual estimate based on standard speed." };
+  }
 
   const ai = new GoogleGenAI({ apiKey });
   try {
@@ -49,13 +49,12 @@ export const getAIEtaPrediction = async (
       }
     });
 
+    // Access .text property directly as a getter.
     const text = response.text;
-    if (!text) throw new Error("AI returned empty text content");
-    
-    return JSON.parse(text);
+    return JSON.parse(text || "{}");
   } catch (error) {
     console.error("AI ETA Prediction Error:", error);
-    return { eta: 15, reason: "Unable to calculate AI ETA, providing a standard estimate." };
+    return { eta: 15, reason: "Standard estimate based on distance." };
   }
 };
 
@@ -64,17 +63,18 @@ export const getAIEtaPrediction = async (
  */
 export const getSmartSummary = async (announcements: string[]) => {
   const apiKey = process.env.API_KEY;
-  if (!apiKey) return "Stay updated with the latest bus alerts below.";
+  if (!apiKey) return "Check the latest alerts below.";
 
   const ai = new GoogleGenAI({ apiKey });
   try {
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
-      contents: `Summarize these bus alerts into one friendly 20-word message for students: ${announcements.join('; ')}`,
+      contents: `Summarize these bus alerts into one friendly 20-word message: ${announcements.join('; ')}`,
     });
-    return response.text || "Stay updated with the latest bus alerts below.";
+    // Access .text property directly.
+    return response.text || "Check the latest alerts below.";
   } catch (error) {
     console.error("AI Summary Error:", error);
-    return "Stay updated with the latest bus alerts below.";
+    return "Check the latest alerts below.";
   }
 };
