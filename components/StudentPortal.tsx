@@ -1,9 +1,9 @@
 
 import React, { useState, useEffect } from 'react';
-import { Bus, Announcement, BusStop } from '../types';
+import { Bus, Announcement } from '../types';
 import BusMap from './BusMap';
 import { MOCK_BUSES, MOCK_ANNOUNCEMENTS, MOCK_STOPS } from '../constants';
-import { getSmartSummary, getAIEtaPrediction } from '../services/geminiService';
+import { getSmartSummary, getAIEtaPrediction } from '../services/services';
 
 const StudentPortal: React.FC = () => {
   const [buses, setBuses] = useState<Bus[]>(MOCK_BUSES);
@@ -58,7 +58,6 @@ const StudentPortal: React.FC = () => {
 
   return (
     <div className="flex flex-col lg:flex-row h-[calc(100vh-80px)] gap-4 p-4 lg:p-6 overflow-hidden">
-      {/* Sidebar List */}
       <div className="w-full lg:w-96 flex flex-col gap-4 overflow-y-auto">
         <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
           <h2 className="text-xl font-bold text-slate-800 mb-4">Bus Directory</h2>
@@ -96,7 +95,6 @@ const StudentPortal: React.FC = () => {
           </div>
         </div>
 
-        {/* AI Insights Card */}
         <div className="bg-gradient-to-br from-blue-600 to-indigo-700 p-4 rounded-xl shadow-md text-white">
           <div className="flex items-center gap-2 mb-2">
             <svg className="w-5 h-5 text-yellow-300" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
@@ -107,7 +105,6 @@ const StudentPortal: React.FC = () => {
           </p>
         </div>
 
-        {/* Announcements */}
         <div className="flex-1 bg-white p-4 rounded-xl shadow-sm border border-slate-200 overflow-y-auto">
           <h3 className="font-bold text-slate-800 mb-3 flex items-center gap-2">
             <svg className="w-5 h-5 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
@@ -127,11 +124,9 @@ const StudentPortal: React.FC = () => {
         </div>
       </div>
 
-      {/* Main Map View */}
       <div className="flex-1 flex flex-col gap-4 relative">
         <div className="flex-1 bg-white p-2 rounded-xl shadow-sm border border-slate-200 relative min-h-[400px]">
           <BusMap buses={buses} selectedBusId={selectedBus?.id} stops={MOCK_STOPS} />
-          
           {selectedBus && (
             <div className="absolute bottom-6 right-6 z-[1000] w-72 bg-white/95 backdrop-blur-md p-4 rounded-2xl shadow-2xl border border-white/20">
               <div className="flex items-center justify-between mb-3">
@@ -163,7 +158,6 @@ const StudentPortal: React.FC = () => {
           )}
         </div>
 
-        {/* History / Recent Activity */}
         <div className="h-32 bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex items-center justify-between">
           <div className="flex gap-8 overflow-x-auto">
             <div>
