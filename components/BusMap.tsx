@@ -24,16 +24,17 @@ const BusMap: React.FC<BusMapProps> = ({ buses, selectedBusId, stops }) => {
       attribution: '© OpenStreetMap contributors'
     }).addTo(leafletMap.current);
 
-    // Add Stop Markers
     stops.forEach(stop => {
       const stopIcon = L.divIcon({
         html: `<div class="bg-blue-600 w-3 h-3 rounded-full border-2 border-white shadow-sm"></div>`,
         className: 'custom-div-icon',
         iconSize: [12, 12]
       });
-      L.marker([stop.lat, stop.lng], { icon: stopIcon })
-        .addTo(leafletMap.current!)
-        .bindPopup(`<b>Stop:</b> ${stop.name}`);
+      if (leafletMap.current) {
+        L.marker([stop.lat, stop.lng], { icon: stopIcon })
+          .addTo(leafletMap.current)
+          .bindPopup(`<b>Stop:</b> ${stop.name}`);
+      }
     });
 
     return () => {
@@ -47,7 +48,6 @@ const BusMap: React.FC<BusMapProps> = ({ buses, selectedBusId, stops }) => {
   useEffect(() => {
     if (!leafletMap.current) return;
 
-    // Update Bus Markers
     buses.forEach(bus => {
       const isSelected = bus.id === selectedBusId;
       const busColor = bus.status === 'Delayed' ? '#ef4444' : '#F4D03F';
@@ -76,14 +76,14 @@ const BusMap: React.FC<BusMapProps> = ({ buses, selectedBusId, stops }) => {
       if (markersRef.current[bus.id]) {
         markersRef.current[bus.id].setLatLng([bus.currentLat, bus.currentLng]);
         markersRef.current[bus.id].setIcon(busIcon);
-      } else {
+      } else if (leafletMap.current) {
         const marker = L.marker([bus.currentLat, bus.currentLng], { icon: busIcon })
-          .addTo(leafletMap.current!)
+          .addTo(leafletMap.current)
           .bindPopup(`<b>Bus ${bus.busNumber}</b><br>Driver: ${bus.driverName}<br>Status: ${bus.status}`);
         markersRef.current[bus.id] = marker;
       }
 
-      if (isSelected) {
+      if (isSelected && leafletMap.current) {
         leafletMap.current.panTo([bus.currentLat, bus.currentLng]);
       }
     });
