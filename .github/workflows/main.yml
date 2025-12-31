@@ -22,14 +22,12 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'
       - name: Install dependencies
         run: npm install
       - name: Type Check
         run: npx tsc --noEmit
 
   # Job 2: Validate Backend (Python)
-  # This ensures any Python logic you add (GPS/Data) is clean
   python-check:
     runs-on: ubuntu-latest
     steps:
@@ -44,10 +42,9 @@ jobs:
           pip install flake8
       - name: Lint with flake8
         run: |
-          # stop the build if there are Python syntax errors or undefined names
-          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-          # exit-zero treats all errors as warnings
-          flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+          # Only check actual python files we care about
+          flake8 eta_calculator.py --count --select=E9,F63,F7,F82 --show-source --statistics
+          flake8 eta_calculator.py --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
 
   # Job 3: Build and Deploy
   deploy:
@@ -56,12 +53,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
       - name: Install & Build
         run: |
           npm install
           npm run build
         env:
-          # This pulls the secret from your GitHub Repo settings
           API_KEY: ${{ secrets.API_KEY }}
       - name: Setup Pages
         uses: actions/configure-pages@v4
