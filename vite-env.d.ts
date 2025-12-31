@@ -1,3 +1,4 @@
+
 /// <reference types="vite/client" />
 
 interface ImportMetaEnv {
@@ -14,3 +15,7 @@ declare namespace NodeJS {
     API_KEY_BUSIFY: string;
   }
 }
+
+declare var process: {
+  env: NodeJS.ProcessEnv;
+};
